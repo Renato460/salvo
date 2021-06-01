@@ -1,0 +1,1 @@
+Además de lo que pidieron, cambié un poco el js para que aceptara también el primer nombre y apellido de la persona, además del usuario.
