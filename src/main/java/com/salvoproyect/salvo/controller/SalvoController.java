@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class SalvoController {
     @RequestMapping("/web")
     public String inicio(){
-        return "games";
+        return "game";
     }
 
 }

@@ -1,6 +1,8 @@
 package com.salvoproyect.salvo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.salvoproyect.salvo.GamePlayer;
+import net.bytebuddy.implementation.bind.annotation.IgnoreForBinding;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -26,14 +28,12 @@ public class Ship {
     @JoinColumn(name = "gamePlayer_Id")
     private GamePlayer gamePlayer;
 
+    @JsonIgnore
     public Map<String, Object> getShipDTO(){
-
         Map<String,Object> ships = new LinkedHashMap<>();
         ships.put("type", this.type);
-        ships.put("location", this.locations);
+        ships.put("locations", this.locations);
         return ships;
-
-
     }
 
     public void addGamePlayer(GamePlayer gamePlayer){

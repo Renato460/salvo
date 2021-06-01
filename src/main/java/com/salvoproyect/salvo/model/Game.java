@@ -86,7 +86,8 @@ public class Game {
             objeto.put("created", this.creationDate);
             objeto.put("gamePlayers", this.getGamePlayerSet().stream().map(GamePlayer::getGames)
                     .collect(toList()));
-            objeto.put("ships", this.getGamePlayerSet().stream().map(GamePlayer::getShips));
+            //objeto.put("ships", this.getGamePlayerSet().stream().map(GamePlayer::getShips));
+            objeto.put("ships", gamePlayer.getShips());
             return objeto;
 
     }

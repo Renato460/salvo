@@ -42,10 +42,10 @@ public class GamePlayer {
         gamePlayer.put("player", this.player.getPlayerData());
         return gamePlayer;
     }
-
+@JsonIgnore
     public List<Map<String,Object>> getShips(){
         List<Map<String,Object>> ships;
-            ships = this.shipSet.stream().filter(ship -> ship.getGamePlayer().getId() == this.id).map(Ship::getShipDTO).collect(Collectors.toList());
+            ships = this.shipSet.stream().map(Ship::getShipDTO).collect(Collectors.toList());
         System.out.println(ships);
             return ships;
     }
@@ -58,6 +58,22 @@ public class GamePlayer {
     }
 
     public GamePlayer() {
+    }
+
+    public Set<Ship> getShipSet() {
+        return shipSet;
+    }
+
+    public void setShipSet(Set<Ship> shipSet) {
+        this.shipSet = shipSet;
+    }
+
+    public Set<Salvo> getSalvoSet() {
+        return salvoSet;
+    }
+
+    public void setSalvoSet(Set<Salvo> salvoSet) {
+        this.salvoSet = salvoSet;
     }
 
     public long getId() {
@@ -93,7 +109,5 @@ public class GamePlayer {
     public void setJoinDate(LocalDateTime joinDate) {
         this.joinDate = joinDate;
     }
-
-
 
 }

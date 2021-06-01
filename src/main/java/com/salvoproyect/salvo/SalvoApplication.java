@@ -82,12 +82,12 @@ public class SalvoApplication {
 			ship1.addGamePlayer(gamePlayer0);
 			ship2.addGamePlayer(gamePlayer0);
 
-			ship1.addlocation("h1");
-			ship1.addlocation("gt");
-			ship1.addlocation("ert");
-			ship2.addlocation("ku");
-			ship2.addlocation("tr");
-			ship2.addlocation("tu");
+			ship1.addlocation("H2");
+			ship1.addlocation("G2");
+			ship1.addlocation("F2");
+			ship2.addlocation("A9");
+			ship2.addlocation("B9");
+			ship2.addlocation("C9");
 
 
 			shipRepository.save(ship1);
