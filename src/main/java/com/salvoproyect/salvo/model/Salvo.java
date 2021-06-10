@@ -1,14 +1,13 @@
 package com.salvoproyect.salvo.model;
 
-
-
-import com.salvoproyect.salvo.GamePlayer;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+
 
 @Entity
 public class Salvo {
@@ -20,19 +19,31 @@ public class Salvo {
 
     @ElementCollection
     @Column(name = "location")
-    private List<String> locations;
+    private List<String> locations = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gamePlayer_id")
-    private GamePlayer gamePlayer;
+    private GamePlayer gamePlayerId;
 
     public Salvo() {
     }
 
-    public Salvo(Integer turn, List<String> locations, GamePlayer gamePlayer) {
+    @JsonIgnore
+    public Map<String, Object> getSalvoesDTO(){
+        Map<String,Object> salvoes = new LinkedHashMap<>();
+        salvoes.put("turn", this.turn);
+        salvoes.put("player", this.gamePlayerId.getPlayer().getId());
+        salvoes.put("locations", this.locations);
+        return salvoes;
+    }
+
+    public Salvo(Integer turn, GamePlayer gamePlayer) {
         this.turn = turn;
-        this.locations = locations;
-        this.gamePlayer = gamePlayer;
+        this.gamePlayerId = gamePlayer;
+    }
+
+    public void addLocation(String location){
+        this.locations.add(location);
     }
 
     public Long getId() {
@@ -60,10 +71,10 @@ public class Salvo {
     }
 
     public GamePlayer getGamePlayer() {
-        return gamePlayer;
+        return gamePlayerId;
     }
 
     public void setGamePlayer(GamePlayer gamePlayer) {
-        this.gamePlayer = gamePlayer;
+        this.gamePlayerId = gamePlayer;
     }
 }

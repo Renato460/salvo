@@ -1,34 +1,78 @@
 package com.salvoproyect.salvo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.salvoproyect.salvo.GamePlayer;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
 @Entity
 public class Game {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
     private long id;
+
+    @OneToMany(mappedBy="game", fetch= FetchType.EAGER)
+    private Set<GamePlayer> gamePlayerSet;
+
+    @OneToMany(mappedBy="gameId", fetch= FetchType.EAGER)
+    private Set<Score> scoreGameSet;
+
     private LocalDateTime creationDate;
 
     public Game(LocalDateTime creationDate) {
-
         this.creationDate = creationDate;
-
     }
 
     public Game() {
+    }
+
+
+    @JsonIgnore
+    public Map<String, Object> getGames (){
+        Map<String, Object> objeto = new LinkedHashMap<>();
+        objeto.put("id", this.id);
+        objeto.put("created", this.creationDate);
+        objeto.put("gamePlayers", this.getGamePlayerSet().stream().map(b -> b.getGamesScore(this))
+                .collect(toList()));
+        objeto.put("scores", this.scoreGameSet.stream().map(Score::getScoreDTO).collect(Collectors.toList()));
+        return objeto;
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getGameById (GamePlayer gamePlayer){
+
+        Map<String, Object> objeto = new LinkedHashMap<>();
+        Map<String, Object> hits = new LinkedHashMap<>();
+        hits.put("self",new ArrayList<>());
+        hits.put("opponent",new ArrayList<>());
+
+        objeto.put("id", this.id);
+        objeto.put("created", this.creationDate);
+        objeto.put("gamePlayers", this.getGamePlayerSet().stream().map(GamePlayer::getGames)
+                .collect(toList()));
+        objeto.put("gameState","PLACESHIPS");
+        //objeto.put("ships", this.getGamePlayerSet().stream().map(GamePlayer::getShips));
+        objeto.put("ships", gamePlayer.getShips());
+        objeto.put("salvoes", getGamePlayerSet().stream().map(GamePlayer::getSalvos).flatMap(Collection::stream).collect(Collectors.toList()));
+        objeto.put("hits", hits);
+        return objeto;
+
+    }
+
+    public Set<Score> getScoreGameSet() {
+        return scoreGameSet;
+    }
+
+    public void setScoreGameSet(Set<Score> scoreGameSet) {
+        this.scoreGameSet = scoreGameSet;
     }
 
     public long getId() {
@@ -63,32 +107,5 @@ public class Game {
 
     public List<Player> getPlayers() {
         return gamePlayerSet.stream().map(GamePlayer::getPlayer).collect(toList());
-    }
-
-    @OneToMany(mappedBy="game", fetch= FetchType.EAGER)
-    private Set<GamePlayer> gamePlayerSet;
-
-    @JsonIgnore
-    public Map<String, Object> getGames (){
-        Map<String, Object> objeto = new LinkedHashMap<>();
-        objeto.put("id", this.id);
-        objeto.put("created", this.creationDate);
-        objeto.put("gamePlayers", this.getGamePlayerSet().stream().map(GamePlayer::getGames)
-        .collect(toList()));
-        return objeto;
-    }
-
-    @JsonIgnore
-    public Map<String, Object> getGameById (GamePlayer gamePlayer){
-
-            Map<String, Object> objeto = new LinkedHashMap<>();
-            objeto.put("id", this.id);
-            objeto.put("created", this.creationDate);
-            objeto.put("gamePlayers", this.getGamePlayerSet().stream().map(GamePlayer::getGames)
-                    .collect(toList()));
-            //objeto.put("ships", this.getGamePlayerSet().stream().map(GamePlayer::getShips));
-            objeto.put("ships", gamePlayer.getShips());
-            return objeto;
-
     }
 }

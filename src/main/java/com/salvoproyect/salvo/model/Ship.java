@@ -1,8 +1,6 @@
 package com.salvoproyect.salvo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.salvoproyect.salvo.GamePlayer;
-import net.bytebuddy.implementation.bind.annotation.IgnoreForBinding;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;

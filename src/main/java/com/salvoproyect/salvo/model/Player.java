@@ -1,7 +1,6 @@
 package com.salvoproyect.salvo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.salvoproyect.salvo.GamePlayer;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -22,13 +21,14 @@ public class Player {
 
     private String email;
 
+    private String password;
+
     @OneToMany(mappedBy="player", fetch= FetchType.EAGER)
     private Set<GamePlayer> gamePlayerSet;
 
-    public void addGamePlayer(GamePlayer gamePlayer){
-        gamePlayer.setPlayer(this);
-        gamePlayerSet.add(gamePlayer);
-    }
+    @OneToMany(mappedBy="playerId", fetch= FetchType.EAGER)
+    private Set<Score> scorePlayerSet;
+
 
     @JsonIgnore
     public Map<String,Object> getPlayerData (){
@@ -40,9 +40,25 @@ public class Player {
 
     public Player() { }
 
-    public Player(String email) {
+    public Player(String email, String password) {
         this.email = email;
+        this.password = password;
     }
+
+
+    public void addGamePlayer(GamePlayer gamePlayer){
+        gamePlayer.setPlayer(this);
+        gamePlayerSet.add(gamePlayer);
+    }
+
+    public Set<Score> getScorePlayerSet() {
+        return scorePlayerSet;
+    }
+
+    public void setScorePlayerSet(Set<Score> scorePlayerSet) {
+        this.scorePlayerSet = scorePlayerSet;
+    }
+
     @JsonIgnore
     public Set<GamePlayer> getGamePlayerSet() {
         return gamePlayerSet;
@@ -73,4 +89,11 @@ public class Player {
         this.email = email;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

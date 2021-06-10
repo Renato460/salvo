@@ -1,4 +1,4 @@
-package com.salvoproyect.salvo;
+package com.salvoproyect.salvo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.salvoproyect.salvo.model.Game;
@@ -11,6 +11,8 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Entity
 public class GamePlayer {
@@ -31,7 +33,7 @@ public class GamePlayer {
     @OneToMany(mappedBy="gamePlayer", fetch= FetchType.EAGER)
     private Set<Ship> shipSet;
 
-    @OneToMany(mappedBy="gamePlayer", fetch= FetchType.EAGER)
+    @OneToMany(mappedBy="gamePlayerId", fetch= FetchType.EAGER)
     private Set<Salvo> salvoSet;
 
     private LocalDateTime joinDate;
@@ -42,12 +44,28 @@ public class GamePlayer {
         gamePlayer.put("player", this.player.getPlayerData());
         return gamePlayer;
     }
-@JsonIgnore
+    public Map<String, Object> getGamesScore (Game game){
+        Map<String, Object> gamePlayer = new LinkedHashMap<>();
+        gamePlayer.put("id", this.id);
+        gamePlayer.put("player", this.player.getPlayerData());
+        //gamePlayer.put("score", getPlayer().getScorePlayerSet().stream().filter(b -> this.getGame().getId()== b.getGameId().getId()).map(Score::getScore).findFirst());
+
+        return gamePlayer;
+    }
+
+    @JsonIgnore
     public List<Map<String,Object>> getShips(){
         List<Map<String,Object>> ships;
-            ships = this.shipSet.stream().map(Ship::getShipDTO).collect(Collectors.toList());
-        System.out.println(ships);
+            ships = this.shipSet.stream().map(Ship::getShipDTO).collect(toList());
+
             return ships;
+    }
+
+    @JsonIgnore
+    public List<Map<String,Object>> getSalvos(){
+        List<Map<String,Object>> salvos;
+        salvos = this.salvoSet.stream().map(Salvo::getSalvoesDTO).collect(toList());
+        return salvos;
     }
 
     public GamePlayer(LocalDateTime joinDate, Game game, Player player) {
