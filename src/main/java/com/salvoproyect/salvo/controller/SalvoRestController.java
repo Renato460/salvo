@@ -2,10 +2,12 @@ package com.salvoproyect.salvo.controller;
 
 import com.salvoproyect.salvo.model.GamePlayer;
 import com.salvoproyect.salvo.model.Player;
+import com.salvoproyect.salvo.model.Ship;
 import com.salvoproyect.salvo.repository.GamePlayerRepository;
 import com.salvoproyect.salvo.repository.GameRepository;
 import com.salvoproyect.salvo.model.Game;
 import com.salvoproyect.salvo.repository.PlayerRepository;
+import com.salvoproyect.salvo.repository.ShipRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,9 @@ public class SalvoRestController {
 
     @Autowired
     private PlayerRepository playerRepository;
+
+    @Autowired
+    private ShipRepository shipRepository;
 
     @RequestMapping("/games")
     public Map<String,Object> getGames(Authentication authentication){
@@ -68,23 +73,27 @@ public class SalvoRestController {
 
     @RequestMapping("/game/{gameid}/players")
     public ResponseEntity<Map<String, Object>> joinGamePlayer( @PathVariable Long gameid, Authentication authentication){
-        Optional<Game> game =gameRepository.findById(gameid);
+        Optional<Game> gameOptional =gameRepository.findById(gameid);
         if (!isGuest(authentication)){
-            if(game.isPresent()){
-                Game gameGame = game.get();
-                Long countPlayers = gamePlayerRepository.findAll().stream().filter(gp -> gp.getGame().getId()==gameGame.getId()).count();
+            if(gameOptional.isPresent()){
+                Game game = gameOptional.get();
+                Long countPlayers = gamePlayerRepository.findAll().stream().filter(gp -> gp.getGame().getId()==game.getId()).count();
                 if(countPlayers==1){
                     Player player = playerRepository.findByEmail(authentication.getName());
-
-                    LocalDateTime time = LocalDateTime.now();
-                    GamePlayer gamePlayer = new GamePlayer(time,gameGame,player);
-                    gamePlayerRepository.save(gamePlayer);
-                    return new ResponseEntity<>(makeMap("gpid",gamePlayer.getId()), HttpStatus.CREATED);
+                    Long findPlayer = game.getGamePlayerSet().stream().filter(gp -> gp.getPlayer().getId() == player.getId()).count();
+                    if(findPlayer==0){
+                        LocalDateTime time = LocalDateTime.now();
+                        GamePlayer gamePlayer = new GamePlayer(time,game,player);
+                        gamePlayerRepository.save(gamePlayer);
+                        return new ResponseEntity<>(makeMap("gpid",gamePlayer.getId()), HttpStatus.CREATED);
+                    }else {
+                        return new ResponseEntity<>(makeMap("error", "Ya estás en éste juego"), HttpStatus.FORBIDDEN);
+                    }
                 }else {
                     return new ResponseEntity<>(makeMap("error", "Game is Full"), HttpStatus.FORBIDDEN);
                 }
 
-            }else if (!game.isPresent()){
+            }else if (!gameOptional.isPresent()){
                 return new ResponseEntity<>(makeMap("error","No such game"), HttpStatus.FORBIDDEN);
             }
         }else {
@@ -117,6 +126,38 @@ public class SalvoRestController {
         }else {
             return new ResponseEntity<>(makeMap("error", "Sin autorizacion"), HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    @RequestMapping(value="/games/players/{gamePlayerID}/ships", method=RequestMethod.POST)
+    public ResponseEntity<String> addShips(@PathVariable long gamePlayerID, @RequestBody List<Ship> ship, Authentication authentication) {
+        Optional<GamePlayer>  gamePlayerOptional = gamePlayerRepository.findById(gamePlayerID);
+
+        if (isGuest(authentication)){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        if(!gamePlayerOptional.isPresent()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        GamePlayer gamePlayer = gamePlayerOptional.get();
+        System.out.println(gamePlayer.getShips());
+        Player player = playerRepository.findByEmail(authentication.getName());
+
+        if(gamePlayer.getPlayer().getId() != player.getId()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        if(gamePlayer.getShips().size()!=0){
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        for (Ship s: ship) {
+            s.setGamePlayer(gamePlayer);
+            shipRepository.save(s);
+        }
+        return new ResponseEntity<>(HttpStatus.CREATED);
+
     }
 
     private boolean isGuest(Authentication authentication) {
