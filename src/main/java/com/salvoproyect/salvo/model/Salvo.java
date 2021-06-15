@@ -19,7 +19,7 @@ public class Salvo {
 
     @ElementCollection
     @Column(name = "location")
-    private List<String> locations = new ArrayList<>();
+    private List<String> salvoLocations = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gamePlayer_id")
@@ -28,12 +28,13 @@ public class Salvo {
     public Salvo() {
     }
 
+
     @JsonIgnore
     public Map<String, Object> getSalvoesDTO(){
         Map<String,Object> salvoes = new LinkedHashMap<>();
         salvoes.put("turn", this.turn);
         salvoes.put("player", this.gamePlayerId.getPlayer().getId());
-        salvoes.put("locations", this.locations);
+        salvoes.put("locations", this.salvoLocations);
         return salvoes;
     }
 
@@ -43,7 +44,7 @@ public class Salvo {
     }
 
     public void addLocation(String location){
-        this.locations.add(location);
+        this.salvoLocations.add(location);
     }
 
     public Long getId() {
@@ -62,12 +63,12 @@ public class Salvo {
         this.turn = turn;
     }
 
-    public List<String> getLocations() {
-        return locations;
+    public List<String> getSalvoLocations() {
+        return salvoLocations;
     }
 
-    public void setLocations(List<String> locations) {
-        this.locations = locations;
+    public void setSalvoLocations(List<String> salvoLocations) {
+        this.salvoLocations = salvoLocations;
     }
 
     public GamePlayer getGamePlayer() {

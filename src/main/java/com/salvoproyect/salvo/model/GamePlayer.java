@@ -57,7 +57,6 @@ public class GamePlayer {
     public List<Map<String,Object>> getShips(){
         List<Map<String,Object>> ships;
             ships = this.shipSet.stream().map(Ship::getShipDTO).collect(toList());
-
             return ships;
     }
 

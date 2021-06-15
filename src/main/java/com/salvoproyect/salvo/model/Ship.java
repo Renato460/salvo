@@ -30,7 +30,7 @@ public class Ship {
     public Map<String, Object> getShipDTO(){
         Map<String,Object> ships = new LinkedHashMap<>();
         ships.put("type", this.type);
-        ships.put("locations", this.shipLocations);
+        ships.put("shipLocations", this.shipLocations);
         return ships;
     }
 

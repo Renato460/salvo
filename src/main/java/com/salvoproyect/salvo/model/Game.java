@@ -50,22 +50,20 @@ public class Game {
     public Map<String, Object> getGameById (GamePlayer gamePlayer){
 
         Map<String, Object> objeto = new LinkedHashMap<>();
-        Map<String, Object> hits = new LinkedHashMap<>();
-        hits.put("self",new ArrayList<>());
-        hits.put("opponent",new ArrayList<>());
 
         objeto.put("id", this.id);
         objeto.put("created", this.creationDate);
         objeto.put("gamePlayers", this.getGamePlayerSet().stream().map(GamePlayer::getGames)
                 .collect(toList()));
         objeto.put("gameState","PLACESHIPS");
-        //objeto.put("ships", this.getGamePlayerSet().stream().map(GamePlayer::getShips));
         objeto.put("ships", gamePlayer.getShips());
         objeto.put("salvoes", getGamePlayerSet().stream().map(GamePlayer::getSalvos).flatMap(Collection::stream).collect(Collectors.toList()));
-        objeto.put("hits", hits);
+
         return objeto;
 
     }
+
+
 
     public Set<Score> getScoreGameSet() {
         return scoreGameSet;
