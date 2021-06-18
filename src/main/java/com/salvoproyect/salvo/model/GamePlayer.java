@@ -31,10 +31,12 @@ public class GamePlayer {
     private Game game;
 
     @OneToMany(mappedBy="gamePlayer", fetch= FetchType.EAGER)
-    private Set<Ship> shipSet;
+    @OrderBy
+    private Set<Ship> shipSet = new LinkedHashSet<>();
 
     @OneToMany(mappedBy="gamePlayerId", fetch= FetchType.EAGER)
-    private Set<Salvo> salvoSet;
+    @OrderBy
+    private Set<Salvo> salvoSet = new LinkedHashSet<>();
 
     private LocalDateTime joinDate;
 

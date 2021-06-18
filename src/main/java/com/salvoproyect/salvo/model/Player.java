@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -24,10 +21,12 @@ public class Player {
     private String password;
 
     @OneToMany(mappedBy="player", fetch= FetchType.EAGER)
-    private Set<GamePlayer> gamePlayerSet;
+    @OrderBy
+    private Set<GamePlayer> gamePlayerSet = new LinkedHashSet<>();
 
     @OneToMany(mappedBy="playerId", fetch= FetchType.EAGER)
-    private Set<Score> scorePlayerSet;
+    @OrderBy
+    private Set<Score> scorePlayerSet = new LinkedHashSet<>();
 
 
     @JsonIgnore

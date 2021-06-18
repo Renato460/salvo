@@ -37,6 +37,9 @@ public class SalvoRestController {
     @Autowired
     private SalvoRepository salvoRepository;
 
+    @Autowired
+    private ScoreRepository scoreRepository;
+
     @RequestMapping("/games")
     public Map<String,Object> getGames(Authentication authentication){
         Map<String,Object> getGamesInfo = new LinkedHashMap<>();
@@ -107,6 +110,13 @@ public class SalvoRestController {
         return map;
     }
 
+    private GamePlayer opPlayer (GamePlayer gamePlayer, Player player){
+        Optional<GamePlayer> opGamePlayer = gamePlayer.getGame().getGamePlayerSet().stream()
+                .filter(gp -> gp.getPlayer().getId()!=player.getId())
+                .findFirst();
+        return opGamePlayer.orElse(new GamePlayer());
+    }
+
     @RequestMapping("/game_view/{gamePlayerId}")
     public ResponseEntity<Map<String, Object>> findGame(@PathVariable Long gamePlayerId,Authentication authentication){
         Optional<GamePlayer> op = gamePlayerRepository.findById(gamePlayerId);
@@ -119,7 +129,9 @@ public class SalvoRestController {
                    /* if(gamePlayerP.getSalvos().size() == 0){
                         mapGamePlayer.put("gameState","PLACESHIPS");
                     }*/
-                    mapGamePlayer.put("hits",setHits(gamePlayerP));
+
+                    mapGamePlayer.put("hits",setHitsDTO(gamePlayerP, opPlayer(gamePlayerP, player)));
+                    mapGamePlayer.put("gameState", statusGame(gamePlayerP,opPlayer(gamePlayerP,player)));
                     return new ResponseEntity<>(mapGamePlayer, HttpStatus.ACCEPTED);
                 }else {
                     return new ResponseEntity<>(makeMap("error", "Error"), HttpStatus.FORBIDDEN);
@@ -134,26 +146,128 @@ public class SalvoRestController {
 
 
 
-    private Map<String, Object> setHits (GamePlayer gamePlayer){
-
-
-        /*gamePlayer.getShipSet().stream().filter(ship -> gamePlayer.getSalvoSet().stream().map(Salvo::getSalvoLocations)
-        .collect(toList()).contains(ship.getShipLocations()));
-
-        System.out.println(gamePlayer.getShipSet().stream().map(Ship::getShipLocations).filter(strings -> gamePlayer.getSalvoSet().stream()
-                .map(Salvo::getSalvoLocations).collect(Collectors.toSet()).contains(strings)).collect(Collectors.toSet()));*/
-
-        System.out.println(gamePlayer.getShips().stream().map(stringObjectMap -> stringObjectMap.get("shipLocations")).collect(Collectors.toSet()));
-
-        //Set<List<String>> locationsShip = gamePlayer.getShipSet().stream().map(Ship::getShipLocations).collect(Collectors.toSet());
-
-
+    private Map<String, Object> setHitsDTO (GamePlayer gamePlayer, GamePlayer opGamePlayer){
 
         Map<String, Object> hits = new LinkedHashMap<>();
-        hits.put("self",new ArrayList<>());
-        hits.put("opponent",new ArrayList<>());
-
+        hits.put("self",self(gamePlayer, opGamePlayer));
+        hits.put("opponent",self(opGamePlayer,gamePlayer));
+        //System.out.println(hits);
         return hits;
+    }
+
+    private Set<Map<String,Object>> self (GamePlayer gamePlayer, GamePlayer opGamePlayer){
+
+        Set<Map<String,Object>> setSelfMap= new LinkedHashSet<>();
+
+        int carrier = 0;
+        int battleship = 0;
+        int submarine = 0;
+        int destroyer = 0;
+        int patrolboat = 0;
+    if (opGamePlayer!=null){
+        for(Salvo salvo : opGamePlayer.getSalvoSet()){
+            Map<String,Object> selfMap = new LinkedHashMap<>();
+            Map<String,Object> damagesMap = new LinkedHashMap<>();
+            Set<String> hitsDone = new LinkedHashSet<>();
+            int carrierHits = 0;
+            int battleshipHits = 0;
+            int submarineHits = 0;
+            int destroyerHits = 0;
+            int patrolboatHits = 0;
+
+            for(String salvoLocation : salvo.getSalvoLocations()) {
+
+                for (Ship ship : gamePlayer.getShipSet()) {
+
+                    for (String shipLocation : ship.getShipLocations()) {
+
+                        if (salvoLocation.equals(shipLocation)) {
+                            hitsDone.add(salvoLocation);
+
+                            if (ship.getType().equals("carrier")) {
+                                carrierHits += 1;
+                                carrier += 1;
+                            }
+                            if (ship.getType().equals("battleship")) {
+                                battleshipHits += 1;
+                                battleship += 1;
+                            }
+                            if (ship.getType().equals("submarine")) {
+                                submarineHits += 1;
+                                submarine += 1;
+                            }
+                            if (ship.getType().equals("destroyer")) {
+                                destroyerHits += 1;
+                                destroyer += 1;
+                            }
+                            if (ship.getType().equals("patrolboat")) {
+                                patrolboatHits += 1;
+                                patrolboat += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            selfMap.put("turn", salvo.getTurn());
+            selfMap.put("hitLocations", hitsDone);
+            damagesMap.put("carrierHits", carrierHits);
+            damagesMap.put("battleshipHits", battleshipHits);
+            damagesMap.put("submarineHits", submarineHits);
+            damagesMap.put("destroyerHits", destroyerHits);
+            damagesMap.put("patrolboatHits", patrolboatHits);
+            damagesMap.put("carrier", carrier);
+            damagesMap.put("battleship", battleship);
+            damagesMap.put("submarine", submarine);
+            damagesMap.put("destroyer", destroyer);
+            damagesMap.put("patrolboat", patrolboat);
+            selfMap.put("damages", damagesMap);
+            int miss = salvo.getSalvoLocations().size()-hitsDone.size();
+            selfMap.put("missed", miss);
+            setSelfMap.add(selfMap);
+        }
+
+        return setSelfMap;
+    }
+
+        return setSelfMap;
+    }
+
+    private String statusGame (GamePlayer gamePlayer, GamePlayer opGamePlayer){
+        int salvoSize = gamePlayer.getSalvoSet().size();
+        int salvoSizeOponnent = opGamePlayer.getSalvoSet().size();
+
+        if (gamePlayer.getShipSet().isEmpty()){
+            return "PLACESHIPS";
+        }
+        if (opGamePlayer.getShipSet().isEmpty()){
+            return "WAIT";
+        }
+        if((totalHit(gamePlayer,opGamePlayer) == shipsSize(gamePlayer))&&(totalHit(opGamePlayer,gamePlayer)==shipsSize(opGamePlayer))){
+            scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),0.5,gamePlayer.getGame().getCreationDate()));
+            return "TIE";
+        }
+        if (totalHit(gamePlayer,opGamePlayer) == shipsSize(gamePlayer)){
+            scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),0,gamePlayer.getGame().getCreationDate()));
+            return "LOST";
+        }
+        if (totalHit(opGamePlayer,gamePlayer)==shipsSize(opGamePlayer)){
+            scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),1,gamePlayer.getGame().getCreationDate()));
+            return "WON";
+        }
+        if (salvoSize>salvoSizeOponnent){
+            return "WAITINGFOROPP";
+        }
+        return "PLAY";
+    }
+
+    private int totalHit(GamePlayer gamePlayer, GamePlayer opGamePlayer){
+         int totalHit = self(gamePlayer, opGamePlayer).stream().mapToInt(map -> ((Set<String>) map.get("hitLocations")).size()).sum();
+        //System.out.println(totalHit);
+        return totalHit;
+    }
+    private int shipsSize(GamePlayer gamePlayer){
+        int shipSize = gamePlayer.getShipSet().stream().mapToInt(ship -> (ship.getShipLocations().size())).sum();
+        return shipSize;
     }
 
     @RequestMapping(value="/games/players/{gamePlayerID}/ships", method=RequestMethod.POST)
@@ -188,7 +302,7 @@ public class SalvoRestController {
 
     }
 
-    @RequestMapping(value="/games/players/{gamePlayerID}/salvos", method=RequestMethod.POST)
+    @RequestMapping(value="/games/players/{gamePlayerID}/salvoes", method=RequestMethod.POST)
     public ResponseEntity<Map<String,Object>> addSalvos(@PathVariable long gamePlayerID, @RequestBody Salvo salvos, Authentication authentication) {
         Optional<GamePlayer>  gamePlayerOptional = gamePlayerRepository.findById(gamePlayerID);
 
@@ -204,15 +318,13 @@ public class SalvoRestController {
 
         Player player = playerRepository.findByEmail(authentication.getName());
 
-        Optional<GamePlayer> opGamePlayer = gamePlayer.getGame().getGamePlayerSet().stream()
-                .filter(gp -> gp.getPlayer().getId()!=player.getId())
-                .findFirst();
+        GamePlayer opGamePlayer = opPlayer(gamePlayer, player);
 
-        if (!opGamePlayer.isPresent()){
+        if (opGamePlayer==null){
             return new ResponseEntity<>(makeMap("error", "No se encontró Oponente"),HttpStatus.UNAUTHORIZED);
         }
 
-        if(gamePlayer.getShipSet().size() == 0 || opGamePlayer.get().getShipSet().size() == 0){
+        if(gamePlayer.getShipSet().size() == 0 || opGamePlayer.getShipSet().size() == 0){
             return new ResponseEntity<>(makeMap("error", "No se encontraron Ships"),HttpStatus.UNAUTHORIZED);
         }
 
@@ -227,18 +339,18 @@ public class SalvoRestController {
 
         int p1Turn = gamePlayer.getSalvoSet().size();
 
-        int p2Turn = opGamePlayer.get().getSalvoSet().size();
+        int p2Turn = opGamePlayer.getSalvoSet().size();
 
         if(p1Turn>p2Turn){
             return new ResponseEntity<>(makeMap("error", "No es su turno"),HttpStatus.FORBIDDEN);
         }
-        Long id = Long.parseLong("11");
+        //Long id = Long.parseLong("11");
 
-        setHits(gamePlayerRepository.findById(id).get());
+
         salvos.setTurn(p1Turn+1);
         salvos.setGamePlayer(gamePlayer);
         salvoRepository.save(salvos);
-
+        //setHits(gamePlayer);
 
 
         return new ResponseEntity<>(makeMap("OK", "Salvo ejecutado!!"),HttpStatus.CREATED);

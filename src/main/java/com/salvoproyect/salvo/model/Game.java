@@ -20,10 +20,12 @@ public class Game {
     private long id;
 
     @OneToMany(mappedBy="game", fetch= FetchType.EAGER)
-    private Set<GamePlayer> gamePlayerSet;
+    @OrderBy
+    private Set<GamePlayer> gamePlayerSet = new LinkedHashSet<>();
 
     @OneToMany(mappedBy="gameId", fetch= FetchType.EAGER)
-    private Set<Score> scoreGameSet;
+    @OrderBy
+    private Set<Score> scoreGameSet = new LinkedHashSet<>();
 
     private LocalDateTime creationDate;
 
@@ -55,7 +57,7 @@ public class Game {
         objeto.put("created", this.creationDate);
         objeto.put("gamePlayers", this.getGamePlayerSet().stream().map(GamePlayer::getGames)
                 .collect(toList()));
-        objeto.put("gameState","PLACESHIPS");
+        //objeto.put("gameState","PLACESHIPS");
         objeto.put("ships", gamePlayer.getShips());
         objeto.put("salvoes", getGamePlayerSet().stream().map(GamePlayer::getSalvos).flatMap(Collection::stream).collect(Collectors.toList()));
 
