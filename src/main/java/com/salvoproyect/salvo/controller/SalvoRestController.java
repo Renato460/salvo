@@ -240,6 +240,9 @@ public class SalvoRestController {
             return "PLACESHIPS";
         }
         if (opGamePlayer.getShipSet().isEmpty()){
+            return "WAITINGFOROPP";
+        }
+        if (salvoSize>salvoSizeOponnent){
             return "WAIT";
         }
         if((totalHit(gamePlayer,opGamePlayer) == shipsSize(gamePlayer))&&(totalHit(opGamePlayer,gamePlayer)==shipsSize(opGamePlayer))){
@@ -254,9 +257,7 @@ public class SalvoRestController {
             scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),1,gamePlayer.getGame().getCreationDate()));
             return "WON";
         }
-        if (salvoSize>salvoSizeOponnent){
-            return "WAITINGFOROPP";
-        }
+
         return "PLAY";
     }
 
