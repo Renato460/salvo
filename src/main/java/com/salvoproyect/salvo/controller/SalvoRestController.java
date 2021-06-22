@@ -240,10 +240,10 @@ public class SalvoRestController {
             return "PLACESHIPS";
         }
         if (opGamePlayer.getShipSet().isEmpty()){
-            return "WAITINGFOROPP";
+            return "WAIT";
         }
         if (salvoSize>salvoSizeOponnent){
-            return "WAIT";
+            return "WAITINGFOROPP";
         }
         if((totalHit(gamePlayer,opGamePlayer) == shipsSize(gamePlayer))&&(totalHit(opGamePlayer,gamePlayer)==shipsSize(opGamePlayer))){
             scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),0.5,gamePlayer.getGame().getCreationDate()));
