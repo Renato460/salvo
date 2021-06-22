@@ -246,18 +246,24 @@ public class SalvoRestController {
             return "WAITINGFOROPP";
         }
         if((totalHit(gamePlayer,opGamePlayer) == shipsSize(gamePlayer))&&(totalHit(opGamePlayer,gamePlayer)==shipsSize(opGamePlayer))){
-            LocalDateTime date = LocalDateTime.now();
-            scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),0.5,date));
+            if(gamePlayer.getGame().getScoreGameSet().size()!=2){
+                LocalDateTime date = LocalDateTime.now();
+                scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),0.5,date));
+            }
             return "TIE";
         }
         if (totalHit(gamePlayer,opGamePlayer) == shipsSize(gamePlayer)){
-            LocalDateTime date = LocalDateTime.now();
-            scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),0,date));
+            if(gamePlayer.getGame().getScoreGameSet().size()!=2){
+                LocalDateTime date = LocalDateTime.now();
+                scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),0,date));
+            }
             return "LOST";
         }
         if (totalHit(opGamePlayer,gamePlayer)==shipsSize(opGamePlayer)){
-            LocalDateTime date = LocalDateTime.now();
-            scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),1,date));
+            if(gamePlayer.getGame().getScoreGameSet().size()!=2){
+                LocalDateTime date = LocalDateTime.now();
+                scoreRepository.save(new Score(gamePlayer.getGame(),gamePlayer.getPlayer(),1,date));
+            }
             return "WON";
         }
 
